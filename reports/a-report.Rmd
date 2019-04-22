@@ -1,0 +1,95 @@
+---
+title: "Lab1, Parte 4: Correlações"
+author: "Alice Fernandes Silva"
+theme: sandstone
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_float: yes
+  html_notebook:
+    toc: yes
+    toc_float: yes
+---
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(ggbeeswarm)
+source(here::here("code/lib.R"))
+theme_set(theme_bw())
+options(scipen = 999)
+```
+Desde o uso das novas tecnologias nas eleições americanas de 2008, o Twitter tem se tornado uma plataforma para as atividades políticas, criando um canal para a interação entre políticos e eleitores. A comunicação política com o uso de mídia social é parte das atividades congressistas nos dias atuais. Além disto, o Twitter se constitui como importante meio para o ganho de popularidade com fins eleitorais.
+
+O cenário político brasileiro não é diferente e a cada dia nossos parlamentares estão mais ativos nas redes sociais.
+
+Utilizando os dados dos parlamentares da câmara, do partido PSL e os que possuem um perfil no twitter, é possível analisar a correlação entre algumas variáveis através de visualizações e transformações.
+
+```{r read}
+atividade = read_projectdata() %>% 
+ filter(casa == "câmara") %>%
+  filter(partido == "PSL") %>%
+  filter(twitter != "NA")
+glimpse(atividade)
+```
+
+#Qual a correlação entre engajamento total próprio e engajamento total de retweets dos deputados do PSL?
+
+```{r}
+atividade %>% 
+  ggplot(mapping = aes(x = atividade$engaj_total_proprio, y = atividade$engaj_total_retweet))+
+  geom_point()
+```
+
+Vemos pela visualização acima que há uma concentração de deputados que possuem pouco engajamento total proprio e  pouco engajamento total de retweet, com essa escala fica dificl de analisar se uma variável influencia na outra.
+Transformando os dois eixo em escala de log, temos a seguinte visualização: 
+
+```{r}
+atividade %>% 
+  ggplot(mapping = aes(x = atividade$engaj_total_proprio, y = atividade$engaj_total_retweet))+
+  scale_x_log10() +
+  scale_y_log10() +
+  geom_point()
+```
+
+É possível perceber que existe uma relação linear entre as duas variáveis em questão, porém essa correlação é fraca e positiva. Existem vários pontos extremos na realação entre essas variávies, por exemplo, tem um ponto que o valor do engajamento próprio é mais ou menos 55.000, mas o engajamento total de retweets é 100, assim como, existem pontos quem o engajamento total de próprio é aproximadamente 10000 e o engajamento total de retweet é 1000000.
+
+```{r}
+atividade %>% 
+  summarise(correlacao = cor(engaj_total_proprio, engaj_total_retweet, method = "pearson"))
+```
+
+#Qual a correlação entre seguidores e engajamento máximo dos deputados do PSL?
+
+```{r}
+atividade_ = atividade %>% 
+  filter(seguidores != "NA")
+
+glimpse(atividade_)
+
+```
+
+```{r}
+atividade_ %>% 
+  ggplot(mapping = aes(x = seguidores, y = engaj_max))+
+  geom_point()
+```
+
+Na visualização acima é notável que há uma concentração de deputados que possuem poucos seguidores e muito engajamento máximo, além disso, existem alguns pontos extremos.
+Transformando os dois eixo em escala de log, temos a seguinte visualização: 
+
+```{r}
+atividade_ %>% 
+  ggplot(mapping = aes(x = seguidores, y = engaj_max))+
+  geom_point()+
+  scale_x_log10()+
+  scale_y_log10()
+```
+
+Com a transformação realizada, temos que, existe uma relação linear entre as duas variáveis em questão, porém essa correlação é fraca e positiva. Existem pontos extremos na relação entre essas variáveis em que o número de seguiodres é baixo, porém o engajamento maximo é muito alto. Vale salientar que a maioria dos pontos possuem engajamento maximo maior que 10000.
+
+
+```{r}
+atividade_ %>% 
+  summarise(correlacao = cor(seguidores, engaj_max, method = "pearson"))
+```
